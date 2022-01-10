@@ -7,7 +7,11 @@ import { APIBaseUrl } from "../constants";
 import LocationModel from "../models/LocationModel";
 import ResponseApiModel from "../models/ResponseApiModel";
 
-export function withBreadcrumbs<P>(
+export interface WithBreadcrumbsProps {
+    children?: JSX.Element | JSX.Element[]
+}
+
+export function withBreadcrumbs<P extends WithBreadcrumbsProps>(
     WrappedComponent: React.ComponentType<P>,
     currentLocationRid: number
 ) {
@@ -47,6 +51,9 @@ export function withBreadcrumbs<P>(
         }
 
         return <WrappedComponent {...props}>
+            <>
+                {props.children}
+            </>
             <Breadcrumbs aria-label="breadcrumb">
                 {
                     generateLinks()

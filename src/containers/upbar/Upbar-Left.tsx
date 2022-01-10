@@ -1,4 +1,6 @@
-interface UpbarLeftProps {
+import { WithBreadcrumbsProps } from "../../hoc/withBreadcrumbs";
+
+interface UpbarLeftProps extends WithBreadcrumbsProps {
     children?: JSX.Element | JSX.Element[]
 }
 

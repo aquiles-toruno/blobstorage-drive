@@ -1,15 +1,30 @@
 import { AppBar, Grid, Toolbar, Typography } from "@mui/material";
 import { Outlet, useParams } from "react-router-dom";
+import DriveItemOptions from "../containers/DriveItemOptions";
 import Upbar from "../containers/upbar/Upbar";
 import UpbarLeft from "../containers/upbar/Upbar-Left";
 import UpbarRight from "../containers/upbar/Upbar-Right";
 import { withBreadcrumbs } from "../hoc/withBreadcrumbs";
+import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 
 interface LayoutProps {
-    children?: JSX.Element | JSX.Element[]
+    onChangeLayout?(layout: DriveLayoutEnum): void
 }
 
-const Layout = () => {
+const Layout = ({ onChangeLayout }: LayoutProps) => {
+    const onOptionClickedHandle = (optCode: string, args?: any) => {
+        switch (optCode) {
+            case "changeLayout":
+                if (onChangeLayout === undefined)
+                    break;
+
+                onChangeLayout(args)
+                break;
+            default:
+                break;
+        }
+    }
+
     let { rid } = useParams()
 
     if (rid === undefined)
@@ -39,7 +54,7 @@ const Layout = () => {
                         <Upbar>
                             <LeftUpbarWithBreadcrumbsComponent />
                             <UpbarRight>
-                                <p>Items options goes here</p>
+                                <DriveItemOptions onOptionClicked={onOptionClickedHandle} />
                             </UpbarRight>
                         </Upbar>
                         <Outlet />

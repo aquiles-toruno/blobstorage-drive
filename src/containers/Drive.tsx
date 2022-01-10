@@ -11,11 +11,9 @@ import DataTable from "../components/generic/DataTable";
 import { GridColDef } from "@mui/x-data-grid";
 import { useParams } from "react-router-dom";
 
-// interface DriveStateState {
-//     driveRid: number;
-//     items: DriveItemModel[];
-//     layout: DriveLayoutEnum
-// };
+interface DriveProps {
+    layout?: DriveLayoutEnum
+};
 
 const columns: GridColDef[] = [
     {
@@ -52,9 +50,8 @@ const columns: GridColDef[] = [
     }
 ]
 
-const Drive = () => {
+const Drive = ({ layout = DriveLayoutEnum.Card }: DriveProps) => {
     const [items, setItems] = useState<DriveItemModel[]>([]);
-    const [layout, setLayout] = useState<DriveLayoutEnum>(DriveLayoutEnum.Card);
     let { rid } = useParams();
     const driveRid = 1
 
