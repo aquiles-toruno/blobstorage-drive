@@ -1,4 +1,4 @@
 export enum DriveLayoutEnum {
-    List,
-    Card
+    List = "List",
+    Card = "Card"
 }

@@ -19,10 +19,12 @@ export function withBreadcrumbs<P extends WithBreadcrumbsProps>(
         const [crumbs, setCrumbs] = useState<LocationModel[]>([]);
 
         useEffect(() => {
+            let isMounted = true
             axios.get<ResponseApiModel<LocationModel[]>>(`${APIBaseUrl}/location/${currentLocationRid}/hierarchy`)
                 .then((response) => {
                     // handle success
-                    setCrumbs(response.data.data);
+                    if (isMounted)
+                        setCrumbs(response.data.data);
                 })
                 .catch(function (error) {
                     // handle error
@@ -31,6 +33,10 @@ export function withBreadcrumbs<P extends WithBreadcrumbsProps>(
                 .then(function () {
                     // always executed
                 });
+
+            return () => {
+                isMounted = false
+            }
         }, [currentLocationRid])
 
         const generateLinks = () => {

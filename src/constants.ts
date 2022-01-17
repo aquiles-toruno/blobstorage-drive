@@ -1,2 +1,1 @@
-// export const APIBaseUrl = "https://localhost:44337/api"
-export const APIBaseUrl = "http://blob-drive-api.somee.com/api"
+export const APIBaseUrl = (process.env.NODE_ENV === "development") ? "https://localhost:44337/api" : "http://blob-drive-api.somee.com/api"

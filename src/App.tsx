@@ -3,7 +3,7 @@ import Layout from './shared/Layout';
 import Drive from './containers/Drive';
 import { Route, Routes } from 'react-router-dom'
 import { DriveLayoutEnum } from './models/DriveLayoutEnum';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
   let [_layout, setLayout] = useState(DriveLayoutEnum.Card);
@@ -12,10 +12,23 @@ function App() {
     setLayout(layout)
   }
 
+  useEffect(() => {
+    let storedLayout: string | null = localStorage.getItem("layout")
+
+    if (storedLayout != null) {
+      let driveLayoutEnum: DriveLayoutEnum = storedLayout as DriveLayoutEnum
+      setLayout(driveLayoutEnum);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("layout", _layout.toString())
+  }, [_layout]);
+
   return (
     <>
       <Routes>
-        <Route path="/" element={<Layout onChangeLayout={onChangeLayoutHandle} />}>
+        <Route path="/" element={<Layout layout={_layout} onChangeLayout={onChangeLayoutHandle} />}>
           <Route path="/" element={<Drive layout={_layout} />} />
           <Route path="/location/:rid" element={<Drive layout={_layout} />} />
         </Route>

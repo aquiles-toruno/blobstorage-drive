@@ -8,10 +8,11 @@ import { withBreadcrumbs } from "../hoc/withBreadcrumbs";
 import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 
 interface LayoutProps {
+    layout: DriveLayoutEnum
     onChangeLayout?(layout: DriveLayoutEnum): void
 }
 
-const Layout = ({ onChangeLayout }: LayoutProps) => {
+const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
     const onOptionClickedHandle = (optCode: string, args?: any) => {
         switch (optCode) {
             case "changeLayout":
@@ -54,7 +55,7 @@ const Layout = ({ onChangeLayout }: LayoutProps) => {
                         <Upbar>
                             <LeftUpbarWithBreadcrumbsComponent />
                             <UpbarRight>
-                                <DriveItemOptions onOptionClicked={onOptionClickedHandle} />
+                                <DriveItemOptions layout={layout} onOptionClicked={onOptionClickedHandle} />
                             </UpbarRight>
                         </Upbar>
                         <Outlet />

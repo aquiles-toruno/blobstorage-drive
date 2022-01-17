@@ -9,17 +9,19 @@ import FileItem from "../components/driveItem/FileItem";
 import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 import DataTable from "../components/generic/DataTable";
 import { GridColDef } from "@mui/x-data-grid";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface DriveProps {
-    layout?: DriveLayoutEnum
+    layout: DriveLayoutEnum
 };
 
 const columns: GridColDef[] = [
     {
         field: 'item_Name',
         headerName: 'Name',
-        width: 200,
+        minWidth: 200,
+        flex: 1,
+        sortable: false,
         renderCell: (params) => {
             let imageUri: string = ''
 
@@ -42,20 +44,39 @@ const columns: GridColDef[] = [
                 }
             }
 
-            return <div>
-                <img src={imageUri} />
-                <span>{params.value}</span>
+            return <div style={{ display: "flex", flex: "0 0 48px" }}>
+                <div style={{ flex: "0 0 auto", height: "24px", padding: "12px 16px", position: "relative", width: "24px" }}>
+                    <div style={{ height: "24px", position: "relative", width: "24px" }}>
+                        <img src={imageUri} alt="doc" />
+                    </div>
+                </div>
+                <div style={{ alignSelf: "center", boxSizing: "border-box", flex: "1 1 auto", fontWeight: 500, overflow: "hidden", paddingRight: "12px", position: "relative", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {params.value}
+                </div>
             </div>
-        }, // renderCell will render the component
+        }
     }
 ]
 
-const Drive = ({ layout = DriveLayoutEnum.Card }: DriveProps) => {
+const Drive = ({ layout}: DriveProps) => {
     const [items, setItems] = useState<DriveItemModel[]>([]);
     let { rid } = useParams();
+    const navigation = useNavigate();
     const driveRid = 1
 
     let locationRid: number = rid === undefined ? 0 : +rid;
+
+    const openFolder = (rid: number) => {
+        navigation(`/location/${rid}`, { replace: false })
+    }
+
+    const onRowDoubleClickHandle = (row: DriveItemModel) => {
+        if (row.itemType === "Location") {
+            openFolder(row.item_Rid);
+        }
+    }
+
+    const getRowId = (row: DriveItemModel) => `${row.item_Rid}_${row.itemType}`
 
     useEffect(() => {
         let rootChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/children`
@@ -82,9 +103,9 @@ const Drive = ({ layout = DriveLayoutEnum.Card }: DriveProps) => {
     let driveItemComponent: JSX.Element;
 
     if (layout == DriveLayoutEnum.Card)
-        driveItemComponent = <DriveItem locations={<LocationItem items={locations} />} files={<FileItem items={files} />} />
+        driveItemComponent = <DriveItem locations={<LocationItem items={locations} onDoubleClik={onRowDoubleClickHandle} />} files={<FileItem items={files} />} />
     else
-        driveItemComponent = <DataTable columns={columns} rows={items} columnIdName="item_Rid" />
+        driveItemComponent = <DataTable columns={columns} rows={items} getRowId={getRowId} onDoubleClick={rw => { onRowDoubleClickHandle(rw.row) }} />
 
     return driveItemComponent;
 }
