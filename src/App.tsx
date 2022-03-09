@@ -12,6 +12,7 @@ function App() {
     setLayout(layout)
   }
 
+  //Component did mount
   useEffect(() => {
     let storedLayout: string | null = localStorage.getItem("layout")
 
@@ -21,19 +22,18 @@ function App() {
     }
   }, []);
 
+  //When _layout changes
   useEffect(() => {
     localStorage.setItem("layout", _layout.toString())
   }, [_layout]);
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Layout layout={_layout} onChangeLayout={onChangeLayoutHandle} />}>
-          <Route path="/" element={<Drive layout={_layout} />} />
-          <Route path="/location/:rid" element={<Drive layout={_layout} />} />
-        </Route>
-      </Routes>
-    </>
+    <Routes>
+      <Route path="/" element={<Layout layout={_layout} onChangeLayout={onChangeLayoutHandle} />}>
+        <Route path="/" element={<Drive layout={_layout} />} />
+        <Route path="/location/:rid" element={<Drive layout={_layout} />} />
+      </Route>
+    </Routes>
   );
 }
 

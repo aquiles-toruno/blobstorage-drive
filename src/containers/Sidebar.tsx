@@ -1,8 +1,8 @@
-interface UpbarLeftProps {
+interface SidebarProps {
     children?: JSX.Element | JSX.Element[]
 }
 
-const UpbarLeft = ({ children }: UpbarLeftProps) => {
+const Sidebar = ({ children }: SidebarProps) => {
     return (
         <div style={{ order: 1 }}>
             {children}
@@ -10,4 +10,4 @@ const UpbarLeft = ({ children }: UpbarLeftProps) => {
     )
 }
 
-export default UpbarLeft;
+export default Sidebar;
