@@ -2,6 +2,7 @@ import DriveItemOption from "../components/driveItemOption/DriveItemOption";
 import { DriveItemOptionModel } from "../models/DriveItemOptionModel";
 import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 import { useEffect, useState } from "react";
+import { useLayout } from "../hooks/useLayout";
 
 interface DriveItemOptionsProps {
     layout: DriveLayoutEnum
@@ -15,6 +16,7 @@ type ActionReducer<T> = {
 
 const DriveItemOptions = ({ layout, onOptionClicked }: DriveItemOptionsProps) => {
     const baseImagePath: string = "/images/"
+    const { setLayout } = useLayout()
 
     const [options, setOptions] = useState<DriveItemOptionModel[]>([
         {
@@ -25,7 +27,8 @@ const DriveItemOptions = ({ layout, onOptionClicked }: DriveItemOptionsProps) =>
             visible: false,
             optionCode: "layout_list",
             action: () => {
-                onOptionClicked("changeLayout", DriveLayoutEnum.List)
+                setLayout(DriveLayoutEnum.List)
+                // onOptionClicked("changeLayout", DriveLayoutEnum.List)
             }
         },
         {
@@ -36,7 +39,8 @@ const DriveItemOptions = ({ layout, onOptionClicked }: DriveItemOptionsProps) =>
             visible: false,
             optionCode: "layout_table",
             action: () => {
-                onOptionClicked("changeLayout", DriveLayoutEnum.Card)
+                setLayout(DriveLayoutEnum.Card)
+                // onOptionClicked("changeLayout", DriveLayoutEnum.Card)
             }
         }
     ])
@@ -47,7 +51,7 @@ const DriveItemOptions = ({ layout, onOptionClicked }: DriveItemOptionsProps) =>
 
         let newArray = Reducer(options, { action: "SHOW_OPTION", payload: options.filter(el => el.optionCode === actionToShow)[0] })
         newArray = Reducer(options, { action: "HIDE_OPTION", payload: options.filter(el => el.optionCode === actionToHide)[0] })
-        
+
         setOptions(newArray);
     }, [layout]);
 

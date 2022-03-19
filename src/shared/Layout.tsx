@@ -10,6 +10,7 @@ import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 import { useBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { Link } from "react-router-dom";
 import Breadcrumbs from '@mui/material/Breadcrumbs';
+import LayoutProvider from "../providers/Layout.Provider";
 
 interface LayoutProps {
     layout: DriveLayoutEnum
@@ -65,7 +66,7 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
     }
 
     return (
-        <>
+        <LayoutProvider>
             <div>
                 <AppBar position="static">
                     <Toolbar>
@@ -161,7 +162,7 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
                     </Grid>
                 </Grid>
             </main>
-        </>
+        </LayoutProvider>
     )
 }
 

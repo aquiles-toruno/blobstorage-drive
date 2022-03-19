@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import axios from "axios";
 import ResponseApiModel from "../models/ResponseApiModel";
 import DriveItemModel from "../models/DriveItemModel";
@@ -9,13 +9,18 @@ import FileItem from "../components/driveItem/FileItem";
 import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 import DataTable from "../components/generic/DataTable";
 import { GridColDef } from "@mui/x-data-grid";
-import { Alert, Snackbar } from "@mui/material";
+import { Alert, AlertColor, Snackbar } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDropzone } from "react-dropzone";
 import LocationItemModel from "../models/LocationItemModel";
+import FileModel from "../models/FileModel";
+import { withLoading } from "../hoc/withLoading";
+import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
+import { useLayout } from "../hooks/useLayout";
 
 interface DriveProps {
-    layout: DriveLayoutEnum
+    // layout: DriveLayoutEnum
+    onLoadingChange?: (isLoading: boolean) => void;
 };
 
 const columns: GridColDef[] = [
@@ -73,9 +78,12 @@ const rejectStyle = {
     borderColor: '#ff1744'
 };
 
-const Drive = ({ layout }: DriveProps) => {
+const Drive = ({ onLoadingChange }: DriveProps) => {
+    const [alertMessage, setAlertMessage] = useState<React.ReactNode>("")
+    const [severityMessage, setSeverityMessage] = useState<AlertColor>("info")
     const [items, setItems] = useState<DriveItemModel[]>([]);
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [currentLocation, setCurrentLocation] = useState<LocationItemModel>({
         childCount: 0,
         fileLocationName: "Mi unidad",
@@ -83,6 +91,7 @@ const Drive = ({ layout }: DriveProps) => {
         url: "",
         createdAt: new Date()
     });
+    let { isAuthenticated, loginWithRedirect, user, getAccessTokenSilently } = useAuth0()
 
     let { rid } = useParams();
     const navigation = useNavigate();
@@ -107,6 +116,10 @@ const Drive = ({ layout }: DriveProps) => {
         let itemChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/items/${locationRid}/children`
         let uri = rid === undefined ? rootChildrenEndPoint : itemChildrenEndPoint;
         let locationUri = `${APIBaseUrl}/location/${locationRid}`
+
+        // let firstRequest = axios.get<ResponseApiModel<LocationItemModel>>(locationUri)
+        // let secondRequest = axios.get<ResponseApiModel<DriveItemModel[]>>(uri)
+        // axios.all([firstRequest, secondRequest])
 
         axios.get<ResponseApiModel<LocationItemModel>>(locationUri)
             .then((response) => {
@@ -145,7 +158,37 @@ const Drive = ({ layout }: DriveProps) => {
             formData.append("file", file, file.name)
         });
 
-        axios.post(uri, formData)
+        let body = JSON.stringify({ location: currentLocation.fileLocationName === "Mi unidad" ? "" : currentLocation.fileLocationName })
+
+        formData.append("Location_Rid", locationRid.toString())
+        formData.append("Location", currentLocation.fileLocationName === "Mi unidad" ? "" : currentLocation.fileLocationName)
+
+        if (onLoadingChange)
+            onLoadingChange(true)
+
+        axios.post<ResponseApiModel<FileModel>>(uri, formData)
+            .then(response => {
+                console.log(response.data)
+
+                setAlertMessage("New item added")
+                setSeverityMessage("success")
+                setOpenSnackbar(true)
+                setItems([
+                    ...items
+                    , {
+                        fileType: response.data.data.fileType,
+                        itemType: "File",
+                        item_Name: response.data.data.item_Name,
+                        item_Rid: response.data.data.item_Rid,
+                        item_Url: ''
+                    }
+                ])
+            })
+            .catch(err => console.log(err))
+            .finally(() => {
+                if (onLoadingChange)
+                    onLoadingChange(false)
+            })
     }
 
     const { getRootProps
@@ -170,6 +213,8 @@ const Drive = ({ layout }: DriveProps) => {
     }
 
     if (isDragAccept && !openSnackbar) {
+        setAlertMessage(<strong>Hola</strong>)
+        setAlertMessage(<p>Drop the files to upload immediatly to: <strong>{currentLocation.fileLocationName}</strong></p>)
         setOpenSnackbar(true)
     }
 
@@ -177,6 +222,7 @@ const Drive = ({ layout }: DriveProps) => {
     let files = items.filter(({ itemType }) => itemType === 'File');
 
     let driveItemComponent: JSX.Element;
+    const { layout } = useLayout()
 
     if (layout === DriveLayoutEnum.Card)
         driveItemComponent = <DriveItem locations={<LocationItem items={locations} onDoubleClik={onRowDoubleClickHandle} />} files={<FileItem items={files} />} />
@@ -186,8 +232,8 @@ const Drive = ({ layout }: DriveProps) => {
     return (
         <>
             <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                <Alert onClose={handleSnackbarClose} severity="info" sx={{ width: '100%' }}>
-                    Drop the files to uload immediatly to: <strong>{currentLocation.fileLocationName}</strong>
+                <Alert onClose={handleSnackbarClose} severity={severityMessage} sx={{ width: '100%' }}>
+                    {alertMessage}
                 </Alert>
             </Snackbar>
             <div {...getRootProps({ style })}>
@@ -198,4 +244,8 @@ const Drive = ({ layout }: DriveProps) => {
     )
 }
 
-export default Drive;
+export default withLoading(Drive)
+// export default withAuthenticationRequired(Drive, {
+//     // Show a message while the user waits to be redirected to the login page.
+//     onRedirecting: () => <div>Redirecting you to the login page...</div>,
+// });
