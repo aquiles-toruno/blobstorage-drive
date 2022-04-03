@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { useLayout } from "../hooks/useLayout";
 
 interface DriveItemOptionsProps {
-    layout: DriveLayoutEnum
-    onOptionClicked<T>(actionCode: string, args?: T): void
+    // layout: DriveLayoutEnum
 }
 
 type ActionReducer<T> = {
@@ -14,9 +13,9 @@ type ActionReducer<T> = {
     payload: T
 }
 
-const DriveItemOptions = ({ layout, onOptionClicked }: DriveItemOptionsProps) => {
+const DriveItemOptions = ({ }: DriveItemOptionsProps) => {
     const baseImagePath: string = "/images/"
-    const { setLayout } = useLayout()
+    const { layout, setLayout } = useLayout()
 
     const [options, setOptions] = useState<DriveItemOptionModel[]>([
         {

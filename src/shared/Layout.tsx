@@ -1,4 +1,4 @@
-import { AppBar, Avatar, Box, Grid, IconButton, Menu, MenuItem, Typography, Toolbar } from "@mui/material";
+import { AppBar, Avatar, Box, Grid, IconButton, Menu, MenuItem, Typography, Toolbar, Tooltip, Divider } from "@mui/material";
 import React from "react";
 import { Outlet, useParams } from "react-router-dom";
 import DriveItemOptions from "../containers/DriveItemOptions";
@@ -6,31 +6,18 @@ import Sidebar from "../containers/Sidebar";
 import Upbar from "../containers/upbar/Upbar";
 import UpbarLeft from "../containers/upbar/Upbar-Left";
 import UpbarRight from "../containers/upbar/Upbar-Right";
-import { DriveLayoutEnum } from "../models/DriveLayoutEnum";
 import { useBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { Link } from "react-router-dom";
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import LayoutProvider from "../providers/Layout.Provider";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface LayoutProps {
-    layout: DriveLayoutEnum
-    onChangeLayout?(layout: DriveLayoutEnum): void
 }
 
-const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
-    const onOptionClickedHandle = (optCode: string, args?: any) => {
-        switch (optCode) {
-            case "changeLayout":
-                if (onChangeLayout === undefined)
-                    break;
-
-                onChangeLayout(args)
-                break;
-            default:
-                break;
-        }
-    }
+const Layout = ({ }: LayoutProps) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -38,15 +25,27 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
     const handleClose = () => {
         setAnchorEl(null);
     };
+    let { getAccessTokenSilently, user, logout } = useAuth0()
 
     let { rid } = useParams()
 
     if (rid === undefined)
         rid = "0"
 
-    let locationRid: number = +rid;
+    let locationRid: number = + rid;
 
-    const { isLoadingCrumbs, crumbs } = useBreadcrumbs(locationRid)
+    const settings = [{
+        id: 1,
+        title: 'Logout',
+        action: logout
+    }];
+
+    const getToken = async () => {
+        let token = await getAccessTokenSilently()
+        return token;
+    }
+
+    const { isLoadingCrumbs, crumbs } = useBreadcrumbs(locationRid, getToken)
 
     const generateLinks = () => {
         if (crumbs.length === 0)
@@ -65,6 +64,14 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
         });
     }
 
+    const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
+    };
+
     return (
         <LayoutProvider>
             <div>
@@ -73,6 +80,44 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
                         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                             Drives
                         </Typography>
+                        <Box>
+                            <Tooltip title="Profile">
+                                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                                    <Avatar alt="Aquiles" src={user?.picture} />
+                                </IconButton>
+                            </Tooltip>
+                            <Menu
+                                sx={{ mt: '45px' }}
+                                id="menu-appbar"
+                                anchorEl={anchorElUser}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(anchorElUser)}
+                                onClose={handleCloseUserMenu}
+                            >
+                                <MenuItem>
+                                    <Typography>{user?.email}</Typography>
+                                </MenuItem>
+                                <Divider />
+                                {settings.map((setting) => (
+                                    <MenuItem key={setting.id} onClick={() => {
+                                        handleCloseUserMenu()
+                                        setting.action({
+                                            returnTo: window.location.origin
+                                        })
+                                    }}>
+                                        <Typography textAlign="center">{setting.title}</Typography>
+                                    </MenuItem>
+                                ))}
+                            </Menu>
+                        </Box>
                     </Toolbar>
                 </AppBar>
             </div>
@@ -155,7 +200,7 @@ const Layout = ({ layout, onChangeLayout }: LayoutProps) => {
                                 </Breadcrumbs>
                             </UpbarLeft>
                             <UpbarRight>
-                                <DriveItemOptions layout={layout} onOptionClicked={onOptionClickedHandle} />
+                                <DriveItemOptions />
                             </UpbarRight>
                         </Upbar>
                         <Outlet />

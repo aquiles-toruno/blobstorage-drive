@@ -19,7 +19,6 @@ import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import { useLayout } from "../hooks/useLayout";
 
 interface DriveProps {
-    // layout: DriveLayoutEnum
     onLoadingChange?: (isLoading: boolean) => void;
 };
 
@@ -91,7 +90,6 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
         url: "",
         createdAt: new Date()
     });
-    let { isAuthenticated, loginWithRedirect, user, getAccessTokenSilently } = useAuth0()
 
     let { rid } = useParams();
     const navigation = useNavigate();
@@ -111,28 +109,41 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
 
     const getRowId = (row: DriveItemModel) => `${row.item_Rid}_${row.itemType}`
 
+    let { getAccessTokenSilently, user } = useAuth0()
+
+    console.log(user)
+
+    const getTokenFn = async (locationUri: string) => {
+        let token = await getAccessTokenSilently()
+        let response = await axios.get<ResponseApiModel<LocationItemModel>>(locationUri, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+
+        setCurrentLocation(response.data.data);
+    }
+
     useEffect(() => {
         let rootChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/children`
         let itemChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/items/${locationRid}/children`
         let uri = rid === undefined ? rootChildrenEndPoint : itemChildrenEndPoint;
         let locationUri = `${APIBaseUrl}/location/${locationRid}`
 
-        // let firstRequest = axios.get<ResponseApiModel<LocationItemModel>>(locationUri)
-        // let secondRequest = axios.get<ResponseApiModel<DriveItemModel[]>>(uri)
-        // axios.all([firstRequest, secondRequest])
+        getTokenFn(locationUri)
 
-        axios.get<ResponseApiModel<LocationItemModel>>(locationUri)
-            .then((response) => {
-                // handle success
-                setCurrentLocation(response.data.data);
-            })
-            .catch(function (error) {
-                // handle error
-                console.log(error);
-            })
-            .then(function () {
-                // always executed
-            });
+        // axios.get<ResponseApiModel<LocationItemModel>>(locationUri, {
+        //     headers: { 'Authorization': 'Bearer ' + token }
+        // })
+        //     .then((response) => {
+        //         // handle success
+        //         setCurrentLocation(response.data.data);
+        //     })
+        //     .catch(function (error) {
+        //         // handle error
+        //         console.log(error);
+        //     })
+        //     .then(function () {
+        //         // always executed
+        //     });
 
         axios.get<ResponseApiModel<DriveItemModel[]>>(uri)
             .then((response) => {
@@ -213,7 +224,6 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
     }
 
     if (isDragAccept && !openSnackbar) {
-        setAlertMessage(<strong>Hola</strong>)
         setAlertMessage(<p>Drop the files to upload immediatly to: <strong>{currentLocation.fileLocationName}</strong></p>)
         setOpenSnackbar(true)
     }
@@ -244,8 +254,8 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
     )
 }
 
-export default withLoading(Drive)
-// export default withAuthenticationRequired(Drive, {
-//     // Show a message while the user waits to be redirected to the login page.
-//     onRedirecting: () => <div>Redirecting you to the login page...</div>,
-// });
+// export default withLoading(Drive)
+export default withAuthenticationRequired(withLoading(Drive), {
+    // Show a message while the user waits to be redirected to the login page.
+    onRedirecting: () => <div>Redirecting you to the login page...</div>
+});

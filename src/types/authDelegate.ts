@@ -1,0 +1,1 @@
+export type AuthDelegate = () => Promise<string>
