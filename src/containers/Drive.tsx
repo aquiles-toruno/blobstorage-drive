@@ -17,6 +17,7 @@ import FileModel from "../models/FileModel";
 import { withLoading } from "../hoc/withLoading";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import { useLayout } from "../hooks/useLayout";
+import DriveModel from "../models/DriveModel";
 
 interface DriveProps {
     onLoadingChange?: (isLoading: boolean) => void;
@@ -90,12 +91,14 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
         url: "",
         createdAt: new Date()
     });
+    const [driveRid, setDriveRid] = useState<number>(0)
+    const [locationRid, setLocationRid] = useState<number>(0)
 
     let { rid } = useParams();
     const navigation = useNavigate();
-    const driveRid = 1
 
-    let locationRid: number = rid === undefined ? 0 : +rid;
+    if (rid !== undefined)
+        setLocationRid(+rid);
 
     const openFolder = (rid: number) => {
         navigation(`/location/${rid}`, { replace: false })
@@ -111,8 +114,6 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
 
     let { getAccessTokenSilently, user } = useAuth0()
 
-    console.log(user)
-
     const getTokenFn = async (locationUri: string) => {
         let token = await getAccessTokenSilently()
         let response = await axios.get<ResponseApiModel<LocationItemModel>>(locationUri, {
@@ -123,27 +124,34 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
     }
 
     useEffect(() => {
+        let endPoint = `${APIBaseUrl}/drive/CreateIfNotExists?userId=${user?.sub}`
+        axios.post<ResponseApiModel<DriveModel>>(endPoint)
+            .then((response) => {
+                // handle success
+                setDriveRid(response.data.data.drive_Rid)
+
+                if (rid === undefined)
+                    setLocationRid(response.data.data.root_Rid)
+            })
+            .catch(function (error) {
+                // handle error
+                console.log(error);
+            })
+            .then(function () {
+                // always executed
+            });
+    }, [])
+
+    useEffect(() => {
+        if (driveRid === 0)
+            return
+
         let rootChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/children`
         let itemChildrenEndPoint = `${APIBaseUrl}/drive/${driveRid}/items/${locationRid}/children`
         let uri = rid === undefined ? rootChildrenEndPoint : itemChildrenEndPoint;
         let locationUri = `${APIBaseUrl}/location/${locationRid}`
 
         getTokenFn(locationUri)
-
-        // axios.get<ResponseApiModel<LocationItemModel>>(locationUri, {
-        //     headers: { 'Authorization': 'Bearer ' + token }
-        // })
-        //     .then((response) => {
-        //         // handle success
-        //         setCurrentLocation(response.data.data);
-        //     })
-        //     .catch(function (error) {
-        //         // handle error
-        //         console.log(error);
-        //     })
-        //     .then(function () {
-        //         // always executed
-        //     });
 
         axios.get<ResponseApiModel<DriveItemModel[]>>(uri)
             .then((response) => {
@@ -172,7 +180,8 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
         let body = JSON.stringify({ location: currentLocation.fileLocationName === "Mi unidad" ? "" : currentLocation.fileLocationName })
 
         formData.append("Location_Rid", locationRid.toString())
-        formData.append("Location", currentLocation.fileLocationName === "Mi unidad" ? "" : currentLocation.fileLocationName)
+        formData.append("UserId", user?.sub ?? "")
+        formData.append("Location", currentLocation.fileLocationName ?? "")
 
         if (onLoadingChange)
             onLoadingChange(true)
@@ -224,7 +233,7 @@ const Drive = ({ onLoadingChange }: DriveProps) => {
     }
 
     if (isDragAccept && !openSnackbar) {
-        setAlertMessage(<p>Drop the files to upload immediatly to: <strong>{currentLocation.fileLocationName}</strong></p>)
+        setAlertMessage(<p>Drop the files to upload immediatly to: <strong>{currentLocation.fileLocationName ?? 'Mi unidad'}</strong></p>)
         setOpenSnackbar(true)
     }
 

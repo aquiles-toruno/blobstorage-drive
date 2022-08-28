@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import LayoutProvider from "../providers/Layout.Provider";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useFilePicker } from "../hooks/useFilePicker";
 
 interface LayoutProps {
 }
@@ -47,6 +48,11 @@ const Layout = ({ }: LayoutProps) => {
 
     const { isLoadingCrumbs, crumbs } = useBreadcrumbs(locationRid, getToken)
 
+    const [openFilePicker, { plainFiles }] = useFilePicker({
+        accept: '.txt',
+        multiple: true
+    })
+
     const generateLinks = () => {
         if (crumbs.length === 0)
             return <Typography color="text.primary" fontSize={18}>Mi unidad</Typography>
@@ -71,6 +77,10 @@ const Layout = ({ }: LayoutProps) => {
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
+
+    const handleUploadFile = () => {
+        openFilePicker()
+    }
 
     return (
         <LayoutProvider>
@@ -173,19 +183,13 @@ const Layout = ({ }: LayoutProps) => {
                                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                             >
                                 <MenuItem>
-                                    <Avatar /> Profile
+                                    Location
+                                </MenuItem>
+                                <MenuItem onClick={handleUploadFile}>
+                                    Upload file
                                 </MenuItem>
                                 <MenuItem>
-                                    <Avatar /> My account
-                                </MenuItem>
-                                <MenuItem>
-                                    Add another account
-                                </MenuItem>
-                                <MenuItem>
-                                    Settings
-                                </MenuItem>
-                                <MenuItem>
-                                    Logout
+                                    Upload location
                                 </MenuItem>
                             </Menu>
                         </Sidebar>

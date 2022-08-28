@@ -10,7 +10,6 @@ import { createBrowserHistory } from "history"
 const history = createBrowserHistory();
 
 const onRedirectCallback = (appState: any) => {
-  debugger
   history.push(
     appState && appState.targetUrl ? appState.targetUrl : window.location.pathname
   );
