@@ -4,6 +4,8 @@ import Drive from './containers/Drive';
 import { Route, Routes } from 'react-router-dom'
 import { DriveLayoutEnum } from './models/DriveLayoutEnum';
 import { useState } from 'react';
+import AppRoutes from './shared/AppRoutes';
+import RoutesCollection from './router'
 
 function App() {
   let [_layout, setLayout] = useState(DriveLayoutEnum.Card);
@@ -14,12 +16,9 @@ function App() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<Layout onChangeLayout={onChangeLayoutHandle} />}>
-          <Route path="/" element={<Drive layout={_layout} />} />
-          <Route path="/location/:rid" element={<Drive layout={_layout} />} />
-        </Route>
-      </Routes>
+      {
+        <AppRoutes routes={RoutesCollection} />
+      }
     </>
   );
 }
